@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Autovem | Artifacts Dashboard</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Marked.js -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <!-- Highlight.js for code styling -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    
+    <style>
+        body { background-color: #0f111a; color: #e4e4e4; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .sidebar { background-color: #1a1d27; border-left: 1px solid #2d313f; }
+        .active-tab { background-color: #2563eb; color: white; border-radius: 0.5rem; }
+        .hover-tab:hover:not(.active-tab) { background-color: #2d313f; border-radius: 0.5rem; }
+        
+        /* Markdown Styles */
+        .markdown-body { font-size: 16px; line-height: 1.6; }
+        .markdown-body h1, .markdown-body h2, .markdown-body h3 { border-bottom: 1px solid #2d313f; padding-bottom: 0.3em; margin-top: 1.5em; margin-bottom: 16px; font-weight: 600; color: #fff;}
+        .markdown-body h1 { font-size: 2em; }
+        .markdown-body h2 { font-size: 1.5em; }
+        .markdown-body pre { background-color: #1a1d27; padding: 16px; border-radius: 6px; overflow: auto; border: 1px solid #2d313f; margin-bottom: 16px;}
+        .markdown-body code { font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace; font-size: 85%; }
+        .markdown-body ul { list-style-type: disc; padding-right: 2em; margin-bottom: 16px; }
+        .markdown-body li { margin-bottom: 0.25em; }
+        .markdown-body blockquote { padding: 0.5em 1em; color: #8b949e; background: #1a1d27; border-right: 0.25em solid #2563eb; margin-bottom: 16px; border-radius: 4px; }
+        .markdown-body blockquote.important { border-right-color: #8b5cf6; }
+        .markdown-body input[type="checkbox"] { margin-left: 0.5em; accent-color: #2563eb; }
+        .markdown-body strong { color: #fff; }
+    </style>
+</head>
+<body class="h-screen flex overflow-hidden">
+
+    <!-- Sidebar -->
+    <div class="w-72 sidebar flex flex-col p-4 shadow-xl z-10">
+        <div class="flex items-center gap-3 mb-8 mt-2 px-2">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center font-bold text-xl shadow-lg shadow-blue-500/30">A</div>
+            <div>
+                <h1 class="text-xl font-bold text-white tracking-wide">Autovem IDE</h1>
+                <p class="text-xs text-blue-400">Remote Workspace</p>
+            </div>
+        </div>
+        
+        <nav class="flex-1 space-y-2">
+            <button onclick="loadFile('task.md', this)" class="tab-btn active-tab w-full flex items-center gap-3 px-4 py-3 text-right font-medium transition-colors">
+                <span class="text-lg">📋</span>
+                <span>قائمة المهام (Task)</span>
+            </button>
+            <button onclick="loadFile('walkthrough.md', this)" class="tab-btn hover-tab w-full flex items-center gap-3 px-4 py-3 text-right font-medium transition-colors">
+                <span class="text-lg">📝</span>
+                <span>التقرير (Walkthrough)</span>
+            </button>
+            <button onclick="loadFile('implementation_plan.md', this)" class="tab-btn hover-tab w-full flex items-center gap-3 px-4 py-3 text-right font-medium transition-colors">
+                <span class="text-lg">🎯</span>
+                <span>الخطة (Plan)</span>
+            </button>
+        </nav>
+        
+        <div class="text-xs text-gray-500 text-center mt-auto flex items-center justify-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+            متصل بسيرفر المزامنة 
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="flex-1 overflow-y-auto p-10 bg-[#0f111a] relative">
+        <button onclick="refreshCurrent()" class="absolute top-6 left-6 bg-[#1a1d27] hover:bg-[#2d313f] text-gray-300 p-2 rounded-lg border border-[#2d313f] transition flex items-center gap-2 text-sm">
+            <span>تحديث</span>
+            <span>🔄</span>
+        </button>
+        
+        <div id="content" class="markdown-body max-w-4xl mx-auto mt-4 pb-20">
+            <div class="flex h-64 items-center justify-center text-gray-500">
+                جاري التحميل...
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentFile = 'task.md';
+        
+        // Setup Marked.js with highlight.js
+        marked.setOptions({
+            highlight: function(code, lang) {
+                const language = hljs.getLanguage(lang) ? lang : 'plaintext';
+                return hljs.highlight(code, { language }).value;
+            },
+            langPrefix: 'hljs language-'
+        });
+
+        async function loadFile(filename, btnElement) {
+            currentFile = filename;
+            
+            if(btnElement) {
+                document.querySelectorAll('.tab-btn').forEach(btn => {
+                    btn.classList.remove('active-tab');
+                    btn.classList.add('hover-tab');
+                });
+                btnElement.classList.add('active-tab');
+                btnElement.classList.remove('hover-tab');
+            }
+
+            const contentDiv = document.getElementById('content');
+            contentDiv.innerHTML = '<div class="flex h-64 items-center justify-center text-gray-500">جاري سحب البيانات من السيرفر...</div>';
+
+            try {
+                const response = await fetch(`artifacts/${filename}?t=${new Date().getTime()}`);
+                if (!response.ok) {
+                    if (response.status === 404) {
+                        contentDiv.innerHTML = `<div class="text-yellow-500 p-4 bg-yellow-900/20 border border-yellow-700 rounded-lg">الملف <b class="font-mono text-yellow-300">${filename}</b> غير موجود على السيرفر بعد.<br>سيتم إنشاؤه عندما يقوم المحرر بالمزامنة من اللاب توب.</div>`;
+                    } else {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return;
+                }
+                const text = await response.text();
+                
+                // استبدال بعض العلامات الخاصة لتظهر بشكل أفضل
+                let html = marked.parse(text);
+                html = html.replace(/\[\/\]/g, '<span class="text-blue-400 font-bold mx-1">[🔄 جاري التنفيذ]</span>');
+                html = html.replace(/\[!IMPORTANT\]/g, '<strong class="text-purple-400">هام جداً:</strong><br>');
+                html = html.replace(/\[!NOTE\]/g, '<strong class="text-blue-400">ملاحظة:</strong><br>');
+                
+                contentDiv.innerHTML = html;
+
+            } catch (error) {
+                contentDiv.innerHTML = `<div class="text-red-500 p-4 bg-red-900/20 border border-red-700 rounded-lg">حدث خطأ أثناء تحميل الملف: ${error.message}</div>`;
+            }
+        }
+        
+        function refreshCurrent() {
+            loadFile(currentFile, null);
+        }
+
+        // Load default tab
+        window.onload = () => loadFile('task.md', document.querySelector('.tab-btn'));
+    </script>
+</body>
+</html>
