@@ -108,7 +108,7 @@
             contentDiv.innerHTML = '<div class="flex h-64 items-center justify-center text-gray-500">جاري سحب البيانات من السيرفر...</div>';
 
             try {
-                const response = await fetch(`artifacts/${filename}?t=${new Date().getTime()}`);
+                const response = await fetch(`${filename}?t=${new Date().getTime()}`);
                 if (!response.ok) {
                     if (response.status === 404) {
                         contentDiv.innerHTML = `<div class="text-yellow-500 p-4 bg-yellow-900/20 border border-yellow-700 rounded-lg">الملف <b class="font-mono text-yellow-300">${filename}</b> غير موجود على السيرفر بعد.<br>سيتم إنشاؤه عندما يقوم المحرر بالمزامنة من اللاب توب.</div>`;
